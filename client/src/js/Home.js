@@ -85,7 +85,7 @@ class Home extends React.Component {
       <div>
         <div>
           <input type="text" onInput={this.updateCreateName} />
-          <input type="text" onInput={this.updateCreatePassword} />
+          <input type="password" onInput={this.updateCreatePassword} />
           <button onClick={this.createTourney}> Create Tourney </button>
         </div>
         <div>
@@ -94,7 +94,7 @@ class Home extends React.Component {
         </div>
         <div>
           <input type="text" onInput={this.updateManageName} />
-          <input type="text" onInput={this.updateManagePassword} />
+          <input type="password" onInput={this.updateManagePassword} />
           <button onClick={this.manageTourney}> Manage Tourney </button>
         </div>
       </div>

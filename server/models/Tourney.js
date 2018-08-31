@@ -4,10 +4,9 @@ const Schema = mongoose.Schema;
 const TourneySchema = new Schema({
   name: String,
   password: String,
-  players: [String],
   status: String,
-  queue: [{name: String, leftTeam: [String], rightTeam: [String]}],
-  matches: [{name: String, leftTeam: [String], rightTeam: [String], time: Number}]
+  queue: [[String, [String], [String]]],
+  matches: [[String, Number, String, String, String]]
 });
 
 module.exports = mongoose.model('Tourney', TourneySchema);

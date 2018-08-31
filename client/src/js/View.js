@@ -5,19 +5,25 @@ class View extends React.Component {
     super(props);
     this.state = {
       name: props.id,
-      status: '???',
-      queue: ['???'],
-      matches: ['???']
+      status: '',
+      queue: [],
+      matches: []
     };
 
     props.socket.emit('get view', props.id);
 
     props.socket.on('update view', function(data) {
-      console.log('updating!');
       if (this.mounted) {
+        console.log(data);
         this.setState({status: data.status,
                        queue: data.queue,
                        matches: data.matches});
+      }
+    }.bind(this));
+
+    props.socket.on('update status', function(data) {
+      if (this.mounted) {
+        this.setState({status: data.status});
       }
     }.bind(this));
   }

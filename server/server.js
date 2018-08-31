@@ -33,11 +33,11 @@ io.on('connection', function(socket) {
         tourney.name = data.name;
         tourney.password = data.password;
         tourney.players = [];
-        tourney.status = 'no delay';
+        tourney.status = '';
         tourney.queue = [];
         tourney.matches = [];
         tourney.save();
-        socket.emit('view', tourney.name);
+        socket.emit('manage', btoa(tourney.name));
         console.log('made a tournament!');
       } else {
         socket.emit('warning', 'A tournament with this name already exists!');
@@ -83,23 +83,67 @@ io.on('connection', function(socket) {
     });
   });
 
+  // Sends new status when status is changed
   socket.on('update status', function(data) {
-    Tourney.findOne({name: data.name}, (err, tourney) => {
+    Tourney.findOneAndUpdate(
+      {name: data.name},
+      {status: data.status},
+      {upsert: false},
+      function(err, prev) {
+        if (prev === null) {
+          socket.emit('warning', 'Unable to update status!');
+        } else {
+          io.emit('update status', {status: data.status});
+        }
+      }
+    );
+  });
+
+  // Returns the current queue
+
+  socket.on('get queue', function(data) {
+    Tourney.findOne({name: data}, (err, tourney) => {
       if (tourney === null) {
-        socket.emit('warning', 'Unable to update status!');
+        socket.emit('warning', 'Unable to find the queue!');
       } else {
-        console.log('updating to ' + data.status);
-        Tourney.update(
-          {name: data.name},
-          {
-            $set: {
-              status: data.status
-            }
-          }
-        );
+        socket.emit('update queue', tourney.queue);
       }
     });
-  })
+  });
+
+  // Returns the current list matches
+
+  socket.on('get matches', function(data) {
+    Tourney.findOne({name: data}, (err, tourney) => {
+      if (tourney === null) {
+        socket.emit('warning', 'Unable to find the matches!');
+      } else {
+        socket.emit('update matches', tourney.matches);
+      }
+    });
+  });
+
+  // Adds a match to the queue and updates all clients
+
+  socket.on('add queue', function(data) {
+    let match = [data.name, data.leftTeam, data.rightTeam];
+    Tourney.findOneAndUpdate(
+      {name: data.id},
+      {$push: {queue: match} },
+      {upsert: false},
+      function(err, prev) {
+        if (prev === null) {
+          socket.emit('warning', 'Unable to add to queue!');
+        } else {
+          match = prev.queue.concat([match]);
+          io.emit('update view', {status: prev.status,
+                                  queue: match,
+                                  matches: prev.matches});
+          socket.emit('update queue', prev.queue.push(match));
+        }
+      }
+    );
+  });
 
   socket.on('disconnect', function() {
     console.log('user disconnected!');
